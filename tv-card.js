@@ -446,84 +446,84 @@ class TVCardServices extends LitElement {
 
         var content = [];
         Object.keys(this.rows).forEach((row_name) => {
-			let row_actions = this.rows[row_name];
+            let row_actions = this.rows[row_name];
 
-			if (preset_rows.includes(row_name)) {
-				if (row_name === "volume_row") {
-					let volume_row = [];
-					if (this.rows.volume_row == "buttons") {
-						volume_row = [
-							this.buildIconButton("volume_down"),
-							this.buildIconButton("volume_mute"),
-							this.buildIconButton("volume_up"),
-						];
-					} else if (this.rows.volume_row == "slider") {
-						volume_row = [this.volume_slider];
-					}
-					content.push(volume_row);
-				} else if (row_name === "navigation_row") {
-					let navigation_row = [];
+            if (preset_rows.includes(row_name)) {
+                if (row_name === "volume_row") {
+                    let volume_row = [];
+                    if (this.rows.volume_row == "buttons") {
+                        volume_row = [
+                            this.buildIconButton("volume_down"),
+                            this.buildIconButton("volume_mute"),
+                            this.buildIconButton("volume_up"),
+                        ];
+                    } else if (this.rows.volume_row == "slider") {
+                        volume_row = [this.volume_slider];
+                    }
+                    content.push(volume_row);
+                } else if (row_name === "navigation_row") {
+                    let navigation_row = [];
 
-					if (this.rows.navigation_row == "buttons") {
-						let up_row = [this.buildIconButton("up")];
-						let middle_row = [
-							this.buildIconButton("left"),
-							this.buildIconButton("enter"),
-							this.buildIconButton("right"),
-						];
-						let down_row = [this.buildIconButton("down")];
-						navigation_row = [up_row, middle_row, down_row];
-					} else if (this.rows.navigation_row == "touchpad") {
-						var touchpad = [
-							html`
-								<toucharea
-									id="toucharea"
-									@click="${this.onClick}"
-									@dblclick="${this.onDoubleClick}"
-									@touchstart="${this.onTouchStart}"
-									@touchmove="${this.onTouchMove}"
-									@touchend="${this.onTouchEnd}"
-								>
-								</toucharea>
-							`,
-						];
-						navigation_row = [touchpad];
-					}
-					content.push(...navigation_row);
-				} else if (row_name === "numpad_row") {
-					if (this.rows.numpad_row == true) {
-						let numpad_row = [
-							[
-								this.buildIconButton("num_1"),
-								this.buildIconButton("num_2"),
-								this.buildIconButton("num_3"),
-							],
-							[
-								this.buildIconButton("num_4"),
-								this.buildIconButton("num_5"),
-								this.buildIconButton("num_6"),
-							],
-							[
-								this.buildIconButton("num_7"),
-								this.buildIconButton("num_8"),
-								this.buildIconButton("num_9"),
-							],
-							[
-								this.buildIconButton("channel_down"),
-								this.buildIconButton("num_0"),
-								this.buildIconButton("channel_up"),
-							],
-						];
-						content.push(...numpad_row);
-					}
-				}
-			} else {
-				if (!!row_actions) {
-					let row_content = this.buildButtonsFromActions(row_actions);
-					content.push(row_content);
-				}
-			}
-		});
+                    if (this.rows.navigation_row == "buttons") {
+                        let up_row = [this.buildIconButton("up")];
+                        let middle_row = [
+                            this.buildIconButton("left"),
+                            this.buildIconButton("enter"),
+                            this.buildIconButton("right"),
+                        ];
+                        let down_row = [this.buildIconButton("down")];
+                        navigation_row = [up_row, middle_row, down_row];
+                    } else if (this.rows.navigation_row == "touchpad") {
+                        var touchpad = [
+                            html`
+                            <toucharea
+                            id="toucharea"
+                            @click="${this.onClick}"
+                            @dblclick="${this.onDoubleClick}"
+                            @touchstart="${this.onTouchStart}"
+                            @touchmove="${this.onTouchMove}"
+                            @touchend="${this.onTouchEnd}"
+                            >
+                            </toucharea>
+                            `,
+                        ];
+                        navigation_row = [touchpad];
+                    }
+                    content.push(...navigation_row);
+                } else if (row_name === "numpad_row") {
+                    if (this.rows.numpad_row == true) {
+                        let numpad_row = [
+                            [
+                                this.buildIconButton("num_1"),
+                                this.buildIconButton("num_2"),
+                                this.buildIconButton("num_3"),
+                            ],
+                            [
+                                this.buildIconButton("num_4"),
+                                this.buildIconButton("num_5"),
+                                this.buildIconButton("num_6"),
+                            ],
+                            [
+                                this.buildIconButton("num_7"),
+                                this.buildIconButton("num_8"),
+                                this.buildIconButton("num_9"),
+                            ],
+                            [
+                                this.buildIconButton("channel_down"),
+                                this.buildIconButton("num_0"),
+                                this.buildIconButton("channel_up"),
+                            ],
+                        ];
+                        content.push(...numpad_row);
+                    }
+                }
+            } else {
+                if (!!row_actions) {
+                    let row_content = this.buildButtonsFromActions(row_actions);
+                    content.push(row_content);
+                }
+            }
+        });
 
         content = content.map(this.buildRow);
 
