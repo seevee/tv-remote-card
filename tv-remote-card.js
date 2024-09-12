@@ -466,6 +466,11 @@ class TVCardServices extends LitElement {
                 ["channel_down", "num_0", "channel_up"],
             ].map(row => row.map(this.buildIconButton, this));
         },
+        media_control_row: () => {
+            return [
+                ["rewind", "play", "pause", "fast_forward"].filter(key => Object.keys(this.keys).includes(key))
+            ].map(row => row.map(this.buildIconButton, this));
+        },
     }
     
     render() {
