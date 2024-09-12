@@ -431,7 +431,6 @@ class TVCardServices extends LitElement {
             } else if (this.rows.volume_row == "slider") {
                 return [[this.volume_slider]];
             }
-            return [[]]
         },
         navigation_row: () => {
             if (this.rows.navigation_row == "buttons") {
@@ -453,26 +452,33 @@ class TVCardServices extends LitElement {
                     </toucharea>
                 `]];
             }
-            return [[]]
         },
         numpad_row: () => {
-            if (!this.rows.numpad_row) {
-                return [[]]
+            if (this.rows.numpad_row === true) {
+                return [
+                    ["num_1", "num_2", "num_3"],
+                    ["num_4", "num_5", "num_6"],
+                    ["num_7", "num_8", "num_9"],
+                    ["channel_down", "num_0", "channel_up"],
+                ].map(row => row.map(this.buildIconButton, this));
             }
-            return [
-                ["num_1", "num_2", "num_3"],
-                ["num_4", "num_5", "num_6"],
-                ["num_7", "num_8", "num_9"],
-                ["channel_down", "num_0", "channel_up"],
-            ].map(row => row.map(this.buildIconButton, this));
         },
         media_control_row: () => {
-            return [
-                ["rewind", "play", "pause", "fast_forward"].filter(key => Object.keys(this.keys).includes(key))
-            ].map(row => row.map(this.buildIconButton, this));
+            if (this.rows.media_control_row === true) {
+                return [
+                    ["rewind", "play", "pause", "fast_forward"].filter(key => Object.keys(this.keys).includes(key))
+                ].map(row => row.map(this.buildIconButton, this));
+            }
         },
     }
     
+    overrideRow(rowName) {
+        if (this.rows[rowName] instanceof Array) {
+            return [this.rows[rowName].map(this.buildIconButton, this)]
+        }
+        return [[]]
+    }
+
     render() {
         if (!this._config || !this._hass || !this.volume_slider) {
             return html ``;
@@ -480,7 +486,7 @@ class TVCardServices extends LitElement {
 
         const content = Object.keys(this.rows).reduce((acc, rowName) => {
             if (Object.keys(this.presetRenderFunctions).includes(rowName)) {
-                return [...acc, ...this.presetRenderFunctions[rowName]()];
+                return [...acc, ...(this.presetRenderFunctions[rowName]() || this.overrideRow(rowName))];
             } else {
                 return [...acc, this.rows[rowName].map(this.buildIconButton, this)];
             }
