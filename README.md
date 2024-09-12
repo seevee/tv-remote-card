@@ -30,7 +30,7 @@
 
 | Name | Type | Requirement | Default |Description
 | ---- | ---- | ------- | ---- | -----------
-| type | string | **Required** | | `custom:tv-card`
+| type | string | **Required** | | `custom:tv-remote-card`
 | entity | string | **Required** | | The `media_player` entity to control.
 | platform | string | **Optional** | `samsungtv` | Platform of `media_player`. Supported values: `samsungtv`, `androidtv`, `webostv`, `roku`, `braviatv`
 | remote_entity | string | **Optional** | `remote.{{entity_id}}` | The remote entity that controls the Roku and Bravia `media_player`
@@ -215,7 +215,7 @@ Install using HACS or [see this guide](https://github.com/thomasloven/hass-confi
 Add a custom element in your `ui-lovelace.yaml`
 
 ```yaml
-      - type: custom:tv-card
+      - type: custom:tv-remote-card
         entity: media_player.tv
         rows:
           power_row:
@@ -246,7 +246,7 @@ Add a custom element in your `ui-lovelace.yaml`
 Playing with order, moving and repeating buttons:
 
 ```yaml
-type: custom:tv-card
+type: custom:tv-remote-card
 entity: media_player.tv
 platform: samsungtv
 title: Example 1
@@ -285,7 +285,7 @@ Result:
 Buttons, buttons everywhere!
 
 ```yaml
-type: custom:tv-card
+type: custom:tv-remote-card
 entity: media_player.tv
 platform: samsungtv
 title: Example 2
@@ -322,7 +322,7 @@ Result:
 Using less
 
 ```yaml
-type: custom:tv-card
+type: custom:tv-remote-card
 entity: media_player.tv
 platform: samsungtv
 title: Example 3
