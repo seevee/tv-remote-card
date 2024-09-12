@@ -574,4 +574,4 @@ class TVCardServices extends LitElement {
     }
 }
 
-customElements.define("tv-remote-card", TVCardServices);
+customElements.define("tv-card", TVCardServices);
