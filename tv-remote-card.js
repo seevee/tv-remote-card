@@ -260,7 +260,7 @@ class TVCardServices extends LitElement {
         }, true);
 
         this.volume_slider.hass = this._hass;
-        this.triggerRender();
+        this.trigger = Math.random();
     }
 
     sendKey(key) {
@@ -421,20 +421,51 @@ class TVCardServices extends LitElement {
             </ha-icon-button>
         `;
     }
-    
-    buildRow(content) {
-        return html `
-            <div class="row">
-                ${content}
-            </div>
-        `;
-    }
-    buildButtonsFromActions(actions) {
-        return actions.map((action) => this.buildIconButton(action));
-    }
 
-    triggerRender() {
-        this.trigger = Math.random();
+    presetRenderFunctions = {
+        volume_row: () => {
+            if (this.rows.volume_row == "buttons") {
+                return [
+                    ["volume_down", "volume_mute", "volume_up"]
+                ].map(row => row.map(this.buildIconButton, this));
+            } else if (this.rows.volume_row == "slider") {
+                return [[this.volume_slider]];
+            }
+            return [[]]
+        },
+        navigation_row: () => {
+            if (this.rows.navigation_row == "buttons") {
+                return [
+                    ["up"],
+                    ["left", "enter", "right"],
+                    ["down"],
+                ].map(row => row.map(this.buildIconButton, this));
+            } else if (this.rows.navigation_row == "touchpad") {
+                return [[html`
+                    <toucharea
+                        id="toucharea"
+                        @click="${this.onClick}"
+                        @dblclick="${this.onDoubleClick}"
+                        @touchstart="${this.onTouchStart}"
+                        @touchmove="${this.onTouchMove}"
+                        @touchend="${this.onTouchEnd}"
+                    >
+                    </toucharea>
+                `]];
+            }
+            return [[]]
+        },
+        numpad_row: () => {
+            if (!this.rows.numpad_row) {
+                return [[]]
+            }
+            return [
+                ["num_1", "num_2", "num_3"],
+                ["num_4", "num_5", "num_6"],
+                ["num_7", "num_8", "num_9"],
+                ["channel_down", "num_0", "channel_up"],
+            ].map(row => row.map(this.buildIconButton, this));
+        },
     }
     
     render() {
@@ -442,97 +473,18 @@ class TVCardServices extends LitElement {
             return html ``;
         }
 
-        const preset_rows = ["navigation_row","numpad_row","volume_row"]
-
-        var content = [];
-        Object.keys(this.rows).forEach((row_name) => {
-            let row_actions = this.rows[row_name];
-
-            if (preset_rows.includes(row_name)) {
-                if (row_name === "volume_row") {
-                    let volume_row = [];
-                    if (this.rows.volume_row == "buttons") {
-                        volume_row = [
-                            this.buildIconButton("volume_down"),
-                            this.buildIconButton("volume_mute"),
-                            this.buildIconButton("volume_up"),
-                        ];
-                    } else if (this.rows.volume_row == "slider") {
-                        volume_row = [this.volume_slider];
-                    }
-                    content.push(volume_row);
-                } else if (row_name === "navigation_row") {
-                    let navigation_row = [];
-
-                    if (this.rows.navigation_row == "buttons") {
-                        let up_row = [this.buildIconButton("up")];
-                        let middle_row = [
-                            this.buildIconButton("left"),
-                            this.buildIconButton("enter"),
-                            this.buildIconButton("right"),
-                        ];
-                        let down_row = [this.buildIconButton("down")];
-                        navigation_row = [up_row, middle_row, down_row];
-                    } else if (this.rows.navigation_row == "touchpad") {
-                        var touchpad = [
-                            html`
-                            <toucharea
-                            id="toucharea"
-                            @click="${this.onClick}"
-                            @dblclick="${this.onDoubleClick}"
-                            @touchstart="${this.onTouchStart}"
-                            @touchmove="${this.onTouchMove}"
-                            @touchend="${this.onTouchEnd}"
-                            >
-                            </toucharea>
-                            `,
-                        ];
-                        navigation_row = [touchpad];
-                    }
-                    content.push(...navigation_row);
-                } else if (row_name === "numpad_row") {
-                    if (this.rows.numpad_row == true) {
-                        let numpad_row = [
-                            [
-                                this.buildIconButton("num_1"),
-                                this.buildIconButton("num_2"),
-                                this.buildIconButton("num_3"),
-                            ],
-                            [
-                                this.buildIconButton("num_4"),
-                                this.buildIconButton("num_5"),
-                                this.buildIconButton("num_6"),
-                            ],
-                            [
-                                this.buildIconButton("num_7"),
-                                this.buildIconButton("num_8"),
-                                this.buildIconButton("num_9"),
-                            ],
-                            [
-                                this.buildIconButton("channel_down"),
-                                this.buildIconButton("num_0"),
-                                this.buildIconButton("channel_up"),
-                            ],
-                        ];
-                        content.push(...numpad_row);
-                    }
-                }
+        const content = Object.keys(this.rows).reduce((acc, rowName) => {
+            if (Object.keys(this.presetRenderFunctions).includes(rowName)) {
+                return [...acc, ...this.presetRenderFunctions[rowName]()];
             } else {
-                if (!!row_actions) {
-                    let row_content = this.buildButtonsFromActions(row_actions);
-                    content.push(row_content);
-                }
+                return [...acc, this.rows[rowName].map(this.buildIconButton, this)];
             }
-        });
+        }, []).map(rowContents => html `<div class="row">${rowContents}</div>`);
 
-        content = content.map(this.buildRow);
-
-        var output = html `
+        return html `
             ${this.renderStyle()}
             <ha-card .header="${this._config.title}">${content}</ha-card>
         `;
-
-        return html `${output}`;
     }
 
     renderStyle() {
@@ -611,4 +563,4 @@ class TVCardServices extends LitElement {
     }
 }
 
-customElements.define("tv-card", TVCardServices);
+customElements.define("tv-card-b", TVCardServices);
