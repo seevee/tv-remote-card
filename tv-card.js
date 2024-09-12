@@ -483,14 +483,10 @@ class TVCardServices extends LitElement {
         if (!this._config || !this._hass || !this.volume_slider) {
             return html ``;
         }
-
         const content = Object.keys(this.rows).reduce((acc, rowName) => {
-            if (Object.keys(this.presetRenderFunctions).includes(rowName)) {
-                return [...acc, ...(this.presetRenderFunctions[rowName]() || this.overrideRow(rowName))];
-            } else {
-                return [...acc, this.rows[rowName].map(this.buildIconButton, this)];
-            }
-        }, []).map(rowContents => html `<div class="row">${rowContents}</div>`);
+            const rowArray = this.presetRenderFunctions[rowName]?.() || this.overrideRow(rowName);
+            return [...acc, ...rowArray];
+        }, []).map(rowContents => html`<div class="row">${rowContents}</div>`);
 
         return html `
             ${this.renderStyle()}
