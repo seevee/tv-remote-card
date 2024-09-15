@@ -9,15 +9,13 @@ const sources = {
     "youtube": {"source": "YouTube", "icon": "mdi:youtube"},
 };
 
-var fireEvent = function(node, type, detail, options) {
-    options = options || {};
+const fireEvent = function(node, type, detail) {
     detail = detail === null || detail === undefined ? {} : detail;
-    var event = new Event(type, {
+    const event = new Event(type, {
         bubbles: false,
     });
     event.detail = detail;
     node.dispatchEvent(event);
-    return event;
 };
 
 class TVCardServices extends LitElement {
@@ -106,7 +104,7 @@ class TVCardServices extends LitElement {
                 break;
             }
             case "roku": {
-                let remote_entity = !config.remote_entity ? "remote." + config.entity.split(".")[1] : config.remote_entity;
+                const remote_entity = !config.remote_entity ? "remote." + config.entity.split(".")[1] : config.remote_entity;
                 this.keys = {
                     "power": {"icon": "mdi:power", "service": "remote.send_command", "service_data": { "entity_id": remote_entity, "command": "power"}},
                     "volume_up": {"icon": "mdi:volume-plus", "service": "remote.send_command", "service_data": { "entity_id": remote_entity, "command": "volume_up"}},
@@ -130,7 +128,7 @@ class TVCardServices extends LitElement {
                 break;
             }
             case "braviatv": {
-                let remote_entity = !config.remote_entity ? "remote." + config.entity.split(".")[1] : config.remote_entity;
+                const remote_entity = !config.remote_entity ? "remote." + config.entity.split(".")[1] : config.remote_entity;
                 this.keys = {
                     "power": {"icon": "mdi:power", "service": "remote.toggle", "service_data": { "entity_id": remote_entity}},
                     "source": {"icon": "mdi:import", "service": "remote.send_command", "service_data": { "entity_id": remote_entity, "command": "Input"}},
@@ -202,10 +200,14 @@ class TVCardServices extends LitElement {
         this.loadCardHelpers();
         this.renderVolumeSlider();
     }
+
     isButtonEnabled(row, button) {
         if (!(this._config[row] instanceof Array)) return false;
-
         return this._config[row].includes(button);
+    }
+
+    isHapticEnabled() {
+        return !!(this._config.enable_button_feedback === undefined || this._config.enable_button_feedback);
     }
 
     set hass(hass) {
@@ -225,14 +227,14 @@ class TVCardServices extends LitElement {
 
     async renderVolumeSlider() {
         if (this._helpers === undefined)
-            await new Promise((resolve) => (this._helpersResolve = resolve));
+            await new Promise(resolve => (this._helpersResolve = resolve));
         if (this._hass === undefined)
-            await new Promise((resolve) => (this._hassResolve = resolve));
+            await new Promise(resolve => (this._hassResolve = resolve));
         this._helpersResolve = undefined;
         this._hassResolve = undefined;
 
-        let volume_entity = (this._config.volume_entity === undefined) ? this._config.entity : this._config.volume_entity;
-        let slider_config = {
+        const volume_entity = (this._config.volume_entity === undefined) ? this._config.entity : this._config.volume_entity;
+        const slider_config = {
             "type": "custom:my-slider",
             "entity": volume_entity,
             "height": "50px",
@@ -253,10 +255,10 @@ class TVCardServices extends LitElement {
         this.volume_slider.style = "flex: 0.9;";
         this.volume_slider.ontouchstart = (e) => {
             e.stopImmediatePropagation();
-            if (this._config.enable_button_feedback === undefined || this._config.enable_button_feedback) fireEvent(window, "haptic", "light");
+            if (this.isHapticEnabled()) fireEvent(this, "haptic", "light");
         };
-        this.volume_slider.addEventListener("input", (e) => {
-            if (this._config.enable_slider_feedback === undefined || this._config.enable_slider_feedback) fireEvent(window, "haptic", "light");
+        this.volume_slider.addEventListener("input", (/*e*/_) => {
+            if (this._config.enable_slider_feedback === undefined || this._config.enable_slider_feedback) fireEvent(this, "haptic", "light");
         }, true);
 
         this.volume_slider.hass = this._hass;
@@ -264,56 +266,49 @@ class TVCardServices extends LitElement {
     }
 
     sendKey(key) {
-        let entity_id = this._config.entity;
+        const entity = { entity_id: this._config.entity };
         if (this._config.platform === "androidtv") {
             this._hass.callService("androidtv", "adb_command", {
                 command: key
-            }, { entity_id: entity_id });
-        }
-        else if (this._config.platform === "webostv") {
+            }, entity);
+        } else if (this._config.platform === "webostv") {
             this._hass.callService("webostv", "button", {
                 button: key
-            }, { entity_id: entity_id });
-        }
-        else {
+            }, entity);
+        } else {
             this._hass.callService("media_player", "play_media", {
                 media_content_id: key,
                 media_content_type: "send_key",
-            }, { entity_id: entity_id });
+            }, entity);
         }
     }
 
     sendAction(action){
-        let info = this.custom_keys[action] || this.custom_sources[action] || this.keys[action] || sources[action];
-
+        const info = this.custom_keys[action] || this.custom_sources[action] || this.keys[action] || sources[action];
         if (info.key) {
             this.sendKey(info.key);
-        }
-        else if (info.source) {
+        } else if (info.source) {
             this.changeSource(info.source);
-        }
-        else if (info.service) {
+        } else if (info.service) {
             const [domain, service] = info.service.split(".", 2);
             this._hass.callService(domain, service, info.service_data);
         }
     }
 
     changeSource(source) {
-        let entity_id = this._config.entity;
-
         // supported by androidtv, samsungtv (i'm not sure about webostv)
         this._hass.callService("media_player", "select_source", {
             source: source,
-            entity_id: entity_id,
+            entity_id: this._config.entity,
         });
     }
 
     onClick(event) {
         event.stopImmediatePropagation();
-        let click_action = () => {
+        const click_action = () => {
             this.sendAction("enter")
-            if (this._config.enable_button_feedback === undefined || this._config.enable_button_feedback) fireEvent(window, "haptic", "light");
-        };  
+            if (this.isHapticEnabled()) fireEvent(this, "haptic", "light");
+        };
         if (this._config.enable_double_click) {
             this.timer = setTimeout(click_action, 200);
         } else {
@@ -329,8 +324,8 @@ class TVCardServices extends LitElement {
         clearTimeout(this.timer);
         this.timer = null;
 
-        this.sendAction(this._config.double_click_action ? this._config.double_click_action : "return")
-        if (this._config.enable_button_feedback === undefined || this._config.enable_button_feedback) fireEvent(window, "haptic", "success");
+        this.sendAction(this._config.double_click_action || "return")
+        if (this.isHapticEnabled()) fireEvent(this, "haptic", "success");
     }
 
     onTouchStart(event) {
@@ -338,15 +333,14 @@ class TVCardServices extends LitElement {
 
         this.holdaction = "enter_hold";
         this.holdtimer = setTimeout(() => {
-            if(this.holdaction == "enter_hold"){
+            if (this.holdaction == "enter_hold") {
                 this.sendAction(this.holdaction)
-                if (this._config.enable_button_feedback === undefined || this._config.enable_button_feedback) fireEvent(window, "haptic", "light");
-            }
-            else {
+                if (this.isHapticEnabled()) fireEvent(this, "haptic", "light");
+            } else {
                 //hold
                 this.holdinterval = setInterval(() => {
                     this.sendAction(this.holdaction)
-                    if (this._config.enable_button_feedback === undefined || this._config.enable_button_feedback) fireEvent(window, "haptic", "light");
+                    if (this.isHapticEnabled()) fireEvent(this, "haptic", "light");
                 }, 300);
             }
         }, 700);
@@ -354,7 +348,7 @@ class TVCardServices extends LitElement {
         window.initialY = event.touches[0].clientY;
     }
 
-    onTouchEnd(event) {
+    onTouchEnd(/*event*/_) {
         clearTimeout(this.timer);
         clearTimeout(this.holdtimer);
         clearInterval(this.holdinterval);
@@ -369,54 +363,40 @@ class TVCardServices extends LitElement {
         if (!initialX || !initialY) {
             return;
         }
-
-        var currentX = event.touches[0].clientX;
-        var currentY = event.touches[0].clientY;
-
-        var diffX = initialX - currentX;
-        var diffY = initialY - currentY;
-
-        if (Math.abs(diffX) > Math.abs(diffY)) {
+        const diffX = initialX - event.touches[0].currentX;
+        const diffY = initialY - event.touches[0].currentY;
+        const action = Math.abs(diffX) > Math.abs(diffY)
             // sliding horizontally
-
-            let action = diffX > 0 ? "left" : "right";
-            this.holdaction = action;
-            this.sendAction(action);
-        } else {
+            ? (diffX > 0 ? "left" : "right")
             // sliding vertically
-            let action = diffY > 0 ? "up" : "down";
-            this.holdaction = action;
-
-            this.sendAction(action);
-        }
-
-        if (this._config.enable_button_feedback === undefined || this._config.enable_button_feedback) fireEvent(window, "haptic", "selection");
+            : (diffY > 0 ? "up" : "down");
+        this.holdaction = action;
+        this.sendAction(action);
+        if (this.isHapticEnabled()) fireEvent(this, "haptic", "selection");
         initialX = null;
         initialY = null;
     }
 
     handleActionClick(e) {
-        let action = e.currentTarget.action;
-        this.sendAction(action);
-
-        if (this._config.enable_button_feedback === undefined || this._config.enable_button_feedback) fireEvent(window, "haptic", "light");
+        this.sendAction(e.currentTarget.action);
+        if (this.isHapticEnabled()) fireEvent(this, "haptic", "light");
     }
 
     buildIconButton(action) {
-        let button_info = this.custom_keys[action] || this.custom_sources[action] || this.keys[action] || sources[action] || {};
+        const button_info = this.custom_keys[action] || this.custom_sources[action] || this.keys[action] || sources[action] || {};
 
-        let icon = button_info.icon;
-        let custom_svg_path = this.custom_icons[icon];
+        const icon = button_info.icon;
+        const custom_svg_path = this.custom_icons[icon];
 
         return html`
             <ha-icon-button
                 .action="${action}"
                 @click="${this.handleActionClick}"
                 title="${action}"
-                .path="${custom_svg_path ? custom_svg_path : ""}"
+                .path="${custom_svg_path || ""}"
                 >
                 <ha-icon
-                    .icon="${!custom_svg_path? icon : ""}"
+                    .icon="${!custom_svg_path ? icon : ""}"
                 </ha-icon>
             </ha-icon-button>
         `;
@@ -424,7 +404,7 @@ class TVCardServices extends LitElement {
 
     presetRenderFunctions = {
         volume_row: () => {
-            if (this.rows.volume_row == "buttons") {
+            if (this.rows.volume_row === "buttons") {
                 return [
                     ["volume_down", "volume_mute", "volume_up"]
                 ].map(row => row.map(this.buildIconButton, this));
@@ -433,7 +413,7 @@ class TVCardServices extends LitElement {
             }
         },
         navigation_row: () => {
-            if (this.rows.navigation_row == "buttons") {
+            if (this.rows.navigation_row === "buttons") {
                 return [
                     ["up"],
                     ["left", "enter", "right"],
@@ -534,17 +514,14 @@ class TVCardServices extends LitElement {
         if (!element._themes) {
             element._themes = {};
         }
-        let themeName = themes.default_theme;
-        if (localTheme === "default" || (localTheme && themes.themes[localTheme])) {
-            themeName = localTheme;
-        }
         const styles = Object.assign({}, element._themes);
+        const themeName = (localTheme === "default" || (localTheme && themes.themes[localTheme]))
+            ? localTheme
+            : themes.default_theme
         if (themeName !== "default") {
-            var theme = themes.themes[themeName];
-            Object.keys(theme).forEach((key) => {
-                var prefixedKey = "--" + key;
-                element._themes[prefixedKey] = "";
-                styles[prefixedKey] = theme[key];
+            Object.entries(themes.themes[themeName]).forEach((key, value) => {
+                element._themes[`--${key}`] = "";
+                styles[`--${key}`] = value;
             });
         }
         if (element.updateStyles) {
