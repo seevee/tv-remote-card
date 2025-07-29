@@ -1,3 +1,6 @@
+> [!WARNING]
+> This fork will no longer be maintained. I have switched to using [nerwyn's universal-remote-card](https://github.com/Nerwyn/universal-remote-card) and have no plans to revisit this code.
+
 # TV Remote Card (with touchpad and haptic feedback)
 
 [![GitHub Release][releases-shield]][releases]
